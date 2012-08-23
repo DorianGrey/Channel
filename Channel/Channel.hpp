@@ -183,6 +183,8 @@ private:
  *         to avoid this. Copying it has the same costs as copying the shared_ptr inside, since it
  *         does not have any additional data members. *
  * \param  MsgType Type of the messages that are exchanged between the communications partners.
+ * \param  Storage Container to put the messages to.
+ * \see    Channel<> for details.
  */
 template<typename MsgType, typename Storage = std::queue<MsgType>>
 struct Chan
@@ -217,9 +219,9 @@ private:
 };
 
 /** \brief Helper function to automatically create channel-objects that are managed by shared_ptr objects.
-        *It simply creates an instance of the helper class mentioned above.
+ *         It simply creates an instance of the helper class mentioned above.
  *
- * \return Chan<U> Channel using type U, managed by the wrapper struct Chan<>.
+ * \return Chan<MsgType,Storage> Channel using type MsgType and Storage, managed by the wrapper struct Chan<>.
  *
  */
 template<typename MsgType, typename Storage = std::queue<MsgType>>
