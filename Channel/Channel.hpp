@@ -15,8 +15,18 @@
 /** \brief This is the basic channel class. It provides an internal message-queue and a stream-like
  *         message add/remove.
  *  \param MsgType Type of the messages that are exchanged between the communications partners.
+ *  \param Storage Possibly custom container class. Due to some STL restrictions, I cannot use a
+ *         template template parameter effectively here. Thus, if the default container should be
+ *         changed, you always have to give the whole container definition, like
+ *         Channel<std::string, std::priority_queue<std::string>> .
+ *         Note that any container you use has to implement either the queue policy (here: push(T),
+ *         pop(), front(), empty() ) directly or has to adopt the queue internals, like shown in
+ *         http://www.cplusplus.com/reference/stl/queue/ .
+ *         I.e., by default, deque and list are implementing this, like
+ *         template < class T, class Container = std::deque<T> > class queue
+ *         template < class T, class Container = std::list<T> > class queue .
  */
-template<typename MsgType>
+template<typename MsgType, typename Storage = std::queue<MsgType>>
 class Channel
 {
 public:
@@ -163,7 +173,7 @@ private:
     std::mutex __accessMutex;
     std::condition_variable __waitCondition;
 
-    std::queue<MsgType> __msgQueue;
+    Storage __msgQueue;
 };
 
 /** \brief This is the channel helper class. Since a channel is regularly used in different threads,
@@ -174,7 +184,7 @@ private:
  *         does not have any additional data members. *
  * \param  MsgType Type of the messages that are exchanged between the communications partners.
  */
-template<typename MsgType>
+template<typename MsgType, typename Storage = std::queue<MsgType>>
 struct Chan
 {
     Chan(): __me(std::make_shared<Channel<MsgType>>())  {}
@@ -203,7 +213,7 @@ struct Chan
         return *__me > destination;
     }
 private:
-    std::shared_ptr<Channel<MsgType>> __me;
+    std::shared_ptr<Channel<MsgType, Storage>> __me;
 };
 
 /** \brief Helper function to automatically create channel-objects that are managed by shared_ptr objects.
@@ -212,9 +222,10 @@ private:
  * \return Chan<U> Channel using type U, managed by the wrapper struct Chan<>.
  *
  */
-template<typename U> inline Chan<U> make_chan()
+template<typename MsgType, typename Storage = std::queue<MsgType>>
+inline Chan<MsgType, Storage> make_chan()
 {
-    return Chan<U>();
+    return Chan<MsgType, Storage>();
 }
 
 #endif
