@@ -10,3 +10,6 @@
 *.lai
 *.la
 *.a
+
+# Mac specific stuff
+.DS_Store
